@@ -16,7 +16,7 @@ const baseAdapter = DrizzleAdapter(db, {
 // Wrap linkAccount so OAuth tokens never land in Postgres as plaintext.
 const encryptingAdapter: Adapter = {
   ...baseAdapter,
-  linkAccount: async (account: AdapterAccount) => {
+  linkAccount: (account: AdapterAccount) => {
     const encrypted: AdapterAccount = {
       ...account,
       refresh_token: account.refresh_token

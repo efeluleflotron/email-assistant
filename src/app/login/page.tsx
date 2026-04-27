@@ -1,5 +1,5 @@
 import { auth, signIn } from "@/auth";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/shadcn/button";
 import { redirect } from "next/navigation";
 
 export default async function LoginPage() {

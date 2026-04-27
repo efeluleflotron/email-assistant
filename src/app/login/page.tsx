@@ -1,4 +1,5 @@
 import { auth, signIn } from "@/auth";
+import { Button } from "@/components/ui/button";
 import { redirect } from "next/navigation";
 
 export default async function LoginPage() {
@@ -14,12 +15,9 @@ export default async function LoginPage() {
           await signIn("google", { redirectTo: "/app" });
         }}
       >
-        <button
-          type="submit"
-          className="cursor-pointer rounded-full border border-black/10 bg-black px-6 py-3 text-white transition-colors hover:bg-zinc-800 dark:border-white/10 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
-        >
+        <Button type="submit" size="lg">
           Sign in with Google
-        </button>
+        </Button>
       </form>
     </main>
   );

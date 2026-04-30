@@ -2,7 +2,7 @@
 
 AI-powered email assistant that **classifies**, **protects**, and **extracts information** from the user's inbox — delivered inside Gmail itself, so the user doesn't have to leave the tool they already use.
 
-> **Status:** early development. Scaffolding on Next.js 16 + React 19 + TypeScript + Tailwind 4 + Jest.
+> **Status:** early development. Scaffolding on Next.js 16 + React 19 + TypeScript + Tailwind 4 + Jest Teste Vercel.
 
 ---
 

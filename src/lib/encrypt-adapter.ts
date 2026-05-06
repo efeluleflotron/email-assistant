@@ -1,22 +1,28 @@
 import type { Adapter, AdapterAccount } from "next-auth/adapters";
 import { encrypt } from "@/lib/crypto";
+import { dispatchGmailWatch } from "@/lib/gmail-watch";
+
+function maybeEncrypt(value: string | undefined): string | undefined {
+  return value ? encrypt(value) : value;
+}
+
+function encryptAccountTokens(account: AdapterAccount): AdapterAccount {
+  return {
+    ...account,
+    access_token: maybeEncrypt(account.access_token),
+    refresh_token: maybeEncrypt(account.refresh_token),
+    id_token: maybeEncrypt(account.id_token),
+  };
+}
 
 export function makeEncryptingAdapter(base: Adapter): Adapter {
   return {
     ...base,
     linkAccount: (account: AdapterAccount) => {
-      return base.linkAccount!({
-        ...account,
-        access_token: account.access_token
-          ? encrypt(account.access_token)
-          : account.access_token,
-        refresh_token: account.refresh_token
-          ? encrypt(account.refresh_token)
-          : account.refresh_token,
-        id_token: account.id_token
-          ? encrypt(account.id_token)
-          : account.id_token,
-      });
+      if (account.provider === "google" && account.access_token) {
+        dispatchGmailWatch(account.access_token, { userId: account.userId });
+      }
+      return base.linkAccount!(encryptAccountTokens(account));
     },
   };
 }

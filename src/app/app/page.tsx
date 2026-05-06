@@ -65,7 +65,7 @@ export default async function AppHome({
   }
 
   return (
-    <main className="grid h-[calc(100vh-3.5rem)] grid-cols-1 md:grid-cols-2 md:divide-x md:divide-border">
+    <main className="grid h-[calc(100vh-3.5rem-2.75rem)] grid-cols-1 md:grid-cols-2 md:divide-x md:divide-border">
       <MessageList messages={listResult.messages} selectedId={selectedId} />
       {selectedId ? (
         <Suspense key={selectedId} fallback={<MessagePaneLoading />}>

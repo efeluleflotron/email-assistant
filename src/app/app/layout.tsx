@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { AppHeader } from "@/components/app-header";
+import { StartWatchForm } from "@/components/start-watch-form";
 
 export default async function AppLayout({
   children,
@@ -14,6 +15,7 @@ export default async function AppLayout({
   return (
     <>
       <AppHeader user={session.user} />
+      <StartWatchForm />
       {children}
     </>
   );

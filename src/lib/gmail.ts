@@ -89,6 +89,36 @@ export async function getMessage(
   };
 }
 
+export interface StartWatchResult {
+  historyId: string;
+  expiration: number;
+}
+
+export async function startGmailWatch(
+  userId: string,
+  topicName: string,
+): Promise<StartWatchResult> {
+  const auth = await getGoogleOAuth2ClientForUser(userId);
+  const gmail = google.gmail({ version: "v1", auth });
+
+  const res = await gmail.users.watch({
+    userId: "me",
+    requestBody: {
+      topicName,
+      labelIds: ["INBOX"],
+      labelFilterBehavior: "INCLUDE",
+    },
+  });
+
+  const historyId = res.data.historyId;
+  const expiration = res.data.expiration;
+  if (!historyId || !expiration) {
+    throw new Error("Gmail watch response missing historyId or expiration");
+  }
+
+  return { historyId, expiration: Number(expiration) };
+}
+
 export const getCachedList = unstable_cache(
   (userId: string) => listRecentMessageMetadata(userId, 10),
   ["gmail-list-v1"],

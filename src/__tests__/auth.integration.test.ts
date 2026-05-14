@@ -68,7 +68,7 @@ function googleTokens(userId: string): AdapterAccount {
     refresh_token: "1//0gxyz_refresh_token",
     id_token: "eyJhbGciOiJSUzI1NiJ9_id_token",
     expires_at: Math.floor(Date.now() / 1000) + 3600,
-    token_type: "Bearer",
+    token_type: "bearer",
     scope: "openid email profile https://www.googleapis.com/auth/gmail.readonly",
   };
 }
@@ -119,7 +119,7 @@ describe("first sign-in", () => {
 
   it("handles a null refresh_token — Google withholds it after first grant", async () => {
     const user = await adapter.createUser!(newUser());
-    await adapter.linkAccount!({ ...googleTokens(user.id), refresh_token: null });
+    await adapter.linkAccount!({ ...googleTokens(user.id), refresh_token: undefined });
 
     const { rows } = await query(`SELECT refresh_token FROM "account" WHERE "userId" = $1`, [user.id]);
     expect(rows[0].refresh_token).toBeNull();

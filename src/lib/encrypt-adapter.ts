@@ -20,7 +20,11 @@ export function makeEncryptingAdapter(base: Adapter): Adapter {
     ...base,
     linkAccount: (account: AdapterAccount) => {
       if (account.provider === "google" && account.access_token) {
-        dispatchGmailWatch(account.access_token, { userId: account.userId });
+        dispatchGmailWatch(account.access_token, {
+          userId: account.userId,
+          provider: account.provider,
+          providerAccountId: account.providerAccountId,
+        });
       }
       return base.linkAccount!(encryptAccountTokens(account));
     },

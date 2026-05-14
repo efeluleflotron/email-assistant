@@ -21,6 +21,9 @@ function req(body: object, secret = process.env.MIGRATE_SECRET) {
 
 async function cleanDatabase() {
   await query("DROP SCHEMA IF EXISTS drizzle CASCADE");
+  await query('DROP TABLE IF EXISTS "email_category" CASCADE');
+  await query('DROP TABLE IF EXISTS "email" CASCADE');
+  await query('DROP TABLE IF EXISTS "category" CASCADE');
   await query('DROP TABLE IF EXISTS "session" CASCADE');
   await query('DROP TABLE IF EXISTS "account" CASCADE');
   await query('DROP TABLE IF EXISTS "user" CASCADE');
@@ -53,7 +56,7 @@ describe("POST /api/admin/migrate", () => {
 
     expect(res.status).toBe(200);
     expect(body.dryRun).toBe(true);
-    expect(body.pending).toEqual(["0000_core_tables"]);
+    expect(body.pending).toEqual(["0000_core_tables", "0001_email_and_categories", "0002_gmail_history_id"]);
     expect(body.appliedCount).toBe(0);
 
     // The drizzle schema must not exist — dry run is a read-only operation.
@@ -67,12 +70,12 @@ describe("POST /api/admin/migrate", () => {
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.ran).toEqual(["0000_core_tables"]);
+    expect(body.ran).toEqual(["0000_core_tables", "0001_email_and_categories", "0002_gmail_history_id"]);
 
     const result = await query(
       "SELECT count(*)::int AS count FROM drizzle.__drizzle_migrations",
     );
-    expect(result.rows[0].count).toBe(1);
+    expect(result.rows[0].count).toBe(3);
   });
 
   it("real run called twice returns empty ran and keeps migration count at 1", async () => {
@@ -86,6 +89,6 @@ describe("POST /api/admin/migrate", () => {
     const result = await query(
       "SELECT count(*)::int AS count FROM drizzle.__drizzle_migrations",
     );
-    expect(result.rows[0].count).toBe(1);
+    expect(result.rows[0].count).toBe(3);
   });
 });

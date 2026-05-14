@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { OAuth2Client } from "google-auth-library";
+import { processGmailNotification } from "@/lib/email-fetcher";
 
 export const runtime = "nodejs";
 
@@ -41,7 +42,10 @@ async function verifyPubSubToken(req: NextRequest): Promise<boolean> {
   }
 
   const token = authHeader.slice(7);
-  const audience = `${process.env.AUTH_URL}/api/webhooks/gmail`;
+  const base = process.env.NGROK_DOMAIN
+    ? `https://${process.env.NGROK_DOMAIN}`
+    : process.env.AUTH_URL;
+  const audience = `${base}/api/webhooks/gmail`;
 
   try {
     const ticket = await authClient.verifyIdToken({ idToken: token, audience });
@@ -95,6 +99,17 @@ export async function POST(req: NextRequest) {
     publishTime: envelope.message?.publishTime,
     subscription: envelope.subscription,
   });
+
+  if (notification.emailAddress && notification.historyId) {
+    after(
+      processGmailNotification(
+        notification.emailAddress,
+        notification.historyId,
+      ).catch((err) =>
+        console.error("[gmail-webhook] processGmailNotification failed", err),
+      ),
+    );
+  }
 
   return ack();
 }

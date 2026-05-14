@@ -1,4 +1,7 @@
 import { google, type gmail_v1 } from "googleapis";
+import { eq, and } from "drizzle-orm";
+import { db } from "@/db/client";
+import { accounts } from "@/db/schema";
 
 export type GmailWatchResponse = gmail_v1.Schema$WatchResponse;
 
@@ -37,17 +40,29 @@ export async function watchGmail(accessToken: string): Promise<GmailWatchRespons
  */
 export function dispatchGmailWatch(
   accessToken: string,
-  ctx: { userId: string },
+  ctx: { userId: string; provider: string; providerAccountId: string },
 ): void {
   if (process.env.NODE_ENV === "test") return;
 
   watchGmail(accessToken)
-    .then((watch) => {
+    .then(async (watch) => {
       console.log("[gmail-watch] subscribed", {
         userId: ctx.userId,
         historyId: watch.historyId,
         expiration: watch.expiration,
       });
+
+      if (watch.historyId) {
+        await db
+          .update(accounts)
+          .set({ gmailHistoryId: String(watch.historyId) })
+          .where(
+            and(
+              eq(accounts.provider, ctx.provider),
+              eq(accounts.providerAccountId, ctx.providerAccountId),
+            ),
+          );
+      }
     })
     .catch((err) => {
       console.error("[gmail-watch] failed to subscribe", {

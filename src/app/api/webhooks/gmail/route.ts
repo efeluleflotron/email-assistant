@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { OAuth2Client } from "google-auth-library";
 
 export const runtime = "nodejs";
+
+const authClient = new OAuth2Client();
 
 type PubSubEnvelope = {
   message?: {
@@ -20,7 +23,48 @@ function ack() {
   return new NextResponse(null, { status: 204 });
 }
 
+function unauthorized() {
+  return new NextResponse(null, { status: 401 });
+}
+
+async function verifyPubSubToken(req: NextRequest): Promise<boolean> {
+  const saEmail = process.env.GOOGLE_PUBSUB_SA_EMAIL;
+  if (!saEmail) {
+    console.error("[gmail-webhook] GOOGLE_PUBSUB_SA_EMAIL is not configured");
+    return false;
+  }
+
+  const authHeader = req.headers.get("authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    console.error("[gmail-webhook] missing or malformed Authorization header");
+    return false;
+  }
+
+  const token = authHeader.slice(7);
+  const audience = `${process.env.AUTH_URL}/api/webhooks/gmail`;
+
+  try {
+    const ticket = await authClient.verifyIdToken({ idToken: token, audience });
+    const payload = ticket.getPayload();
+    if (!payload?.email_verified || payload.email !== saEmail) {
+      console.error("[gmail-webhook] token email mismatch", {
+        got: payload?.email,
+        expected: saEmail,
+      });
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("[gmail-webhook] token verification failed", err);
+    return false;
+  }
+}
+
 export async function POST(req: NextRequest) {
+  if (!(await verifyPubSubToken(req))) {
+    return unauthorized();
+  }
+
   let envelope: PubSubEnvelope;
   try {
     envelope = (await req.json()) as PubSubEnvelope;

@@ -8,6 +8,20 @@
       "when": 1777240673093,
       "tag": "0000_core_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1778721027278,
+      "tag": "0001_email_and_categories",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778728522847,
+      "tag": "0002_gmail_history_id",
+      "breakpoints": true
     }
   ]
 }

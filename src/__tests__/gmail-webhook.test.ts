@@ -8,6 +8,17 @@
 // jest.mock is hoisted above imports, so the factory cannot close over module-level
 // variables. Instead we mock the class self-contained and retrieve the instance
 // via jest.mocked() in beforeAll after the route module has loaded.
+// email-fetcher imports googleapis (ESM-only), which can't be loaded without a
+// proper mock in this test environment. Stub it so only auth logic is tested here.
+jest.mock("@/lib/email-fetcher", () => ({
+  processGmailNotification: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock("next/server", () => ({
+  ...jest.requireActual("next/server"),
+  after: jest.fn((p: Promise<unknown>) => p.catch(() => {})),
+}));
+
 jest.mock("google-auth-library", () => ({
   OAuth2Client: jest.fn().mockImplementation(() => ({
     verifyIdToken: jest.fn(),

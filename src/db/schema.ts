@@ -1,4 +1,5 @@
 import {
+  bigint,
   integer,
   pgTable,
   primaryKey,
@@ -36,6 +37,7 @@ export const accounts = pgTable(
     id_token: text("id_token"),
     session_state: text("session_state"),
     gmailHistoryId: text("gmailHistoryId"),
+    gmailWatchExpiration: bigint("gmailWatchExpiration", { mode: "number" }),
   },
   (t) => [primaryKey({ columns: [t.provider, t.providerAccountId] })],
 );

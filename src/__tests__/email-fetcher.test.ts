@@ -69,6 +69,11 @@ jest.mock("@/lib/gmail-watch", () => ({
   watchGmail: jest.fn().mockResolvedValue({ historyId: "99999" }),
 }));
 
+// ── google-auth mock ─────────────────────────────────────────────────────────
+jest.mock("@/lib/google-auth", () => ({
+  getAccessToken: jest.fn(),
+}));
+
 // ── schema mock — only needed so drizzle helpers resolve symbols ─────────────
 jest.mock("@/db/schema", () => ({
   users: {},
@@ -79,6 +84,7 @@ jest.mock("@/db/schema", () => ({
 import { processGmailNotification } from "@/lib/email-fetcher";
 import { google } from "googleapis";
 import { db } from "@/db/client";
+import { getAccessToken } from "@/lib/google-auth";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 function getMocks() {
@@ -153,6 +159,7 @@ function makeHistoryResponse(messageIds: string[]) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  (getAccessToken as jest.Mock).mockResolvedValue("valid-token");
   // Re-initialize google.gmail mock so each test gets a fresh instance
   (google.gmail as jest.Mock).mockReturnValue({
     users: {
@@ -260,24 +267,10 @@ describe("processGmailNotification", () => {
     expect(db.insert).not.toHaveBeenCalled();
   });
 
-  it("refreshes the token when it is expired and retries with the new token", async () => {
-    const expiredAccount = {
-      ...VALID_ACCOUNT,
-      expires_at: Math.floor(Date.now() / 1000) - 60, // expired 1 minute ago
-    };
-
+  it("uses the token returned by getAccessToken to call the Gmail API", async () => {
     (db.query.users.findFirst as jest.Mock).mockResolvedValue(VALID_USER);
-    (db.query.accounts.findFirst as jest.Mock).mockResolvedValue(expiredAccount);
-
-    // getAccessToken is called on the OAuth2 instance used for refresh
-    const newExpiry = Math.floor(Date.now() / 1000) + 3600;
-    (google.auth.OAuth2 as unknown as jest.Mock).mockImplementation(() => ({
-      setCredentials: jest.fn(),
-      getAccessToken: jest.fn().mockResolvedValue({
-        token: "new-token",
-        res: { data: { expiry_date: newExpiry * 1000 } },
-      }),
-    }));
+    (db.query.accounts.findFirst as jest.Mock).mockResolvedValue(VALID_ACCOUNT);
+    (getAccessToken as jest.Mock).mockResolvedValue("refreshed-token");
 
     const gmail = google.gmail({ version: "v1" } as any);
     (gmail.users.history.list as jest.Mock).mockResolvedValue(
@@ -289,9 +282,7 @@ describe("processGmailNotification", () => {
 
     await processGmailNotification("test@example.com", "12345");
 
-    // Token refresh: db.update should have been called to persist the new token
-    expect(db.update).toHaveBeenCalled();
-    // Email should still be stored
+    expect(getAccessToken).toHaveBeenCalledWith(VALID_ACCOUNT);
     expect(db.insert).toHaveBeenCalledTimes(1);
   });
 });

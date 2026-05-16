@@ -55,7 +55,10 @@ export function dispatchGmailWatch(
       if (watch.historyId) {
         await db
           .update(accounts)
-          .set({ gmailHistoryId: String(watch.historyId) })
+          .set({
+            gmailHistoryId: String(watch.historyId),
+            gmailWatchExpiration: watch.expiration ? Number(watch.expiration) : undefined,
+          })
           .where(
             and(
               eq(accounts.provider, ctx.provider),

@@ -56,7 +56,7 @@ describe("POST /api/admin/migrate", () => {
 
     expect(res.status).toBe(200);
     expect(body.dryRun).toBe(true);
-    expect(body.pending).toEqual(["0000_core_tables", "0001_email_and_categories", "0002_gmail_history_id"]);
+    expect(body.pending).toEqual(["0000_core_tables", "0001_email_and_categories", "0002_gmail_history_id", "0003_gmail_watch_expiration"]);
     expect(body.appliedCount).toBe(0);
 
     // The drizzle schema must not exist — dry run is a read-only operation.
@@ -70,12 +70,12 @@ describe("POST /api/admin/migrate", () => {
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.ran).toEqual(["0000_core_tables", "0001_email_and_categories", "0002_gmail_history_id"]);
+    expect(body.ran).toEqual(["0000_core_tables", "0001_email_and_categories", "0002_gmail_history_id", "0003_gmail_watch_expiration"]);
 
     const result = await query(
       "SELECT count(*)::int AS count FROM drizzle.__drizzle_migrations"
     );
-    expect(result.rows[0].count).toBe(3);
+    expect(result.rows[0].count).toBe(4);
   });
 
   it("real run called twice returns empty ran and keeps migration count at 1", async () => {
@@ -89,6 +89,6 @@ describe("POST /api/admin/migrate", () => {
     const result = await query(
       "SELECT count(*)::int AS count FROM drizzle.__drizzle_migrations"
     );
-    expect(result.rows[0].count).toBe(3);
+    expect(result.rows[0].count).toBe(4);
   });
 });

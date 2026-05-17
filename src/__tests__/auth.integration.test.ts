@@ -13,44 +13,44 @@ import type { Adapter, AdapterAccount } from "next-auth/adapters";
 import { db, query, runMigrations } from "./helpers/db";
 
 beforeAll(runMigrations);
-beforeEach(() => query('TRUNCATE "session", "account", "user" CASCADE'));
+beforeEach(() => query("TRUNCATE \"session\", \"account\", \"user\" CASCADE"));
 
 // Minimal base adapter backed by Drizzle — avoids importing @auth/drizzle-adapter
 // (ESM-only, incompatible with ts-jest) while still testing our real DB layer.
 function buildBaseAdapter(): Adapter {
   return {
     createUser: async (user) => {
-      await db.insert(schema.users).values(user as any);
+      await db.insert(schema.users).values(user);
       return user;
     },
     linkAccount: async (account) => {
-      await db.insert(schema.accounts).values(account as any);
+      await db.insert(schema.accounts).values(account);
       return null;
     },
     createSession: async (session) => {
       await db.insert(schema.sessions).values(session);
-      return session as any;
+      return session;
     },
     getSessionAndUser: async (sessionToken) => {
       const session = await db.query.sessions.findFirst({
-        where: (s, { eq }) => eq(s.sessionToken, sessionToken),
+        where: (s, { eq }) => eq(s.sessionToken, sessionToken)
       });
       if (!session) return null;
       const user = await db.query.users.findFirst({
-        where: (u, { eq }) => eq(u.id, session.userId),
+        where: (u, { eq }) => eq(u.id, session.userId)
       });
-      return user ? { session: session as any, user: user as any } : null;
+      return user ? { session: session, user: user } : null;
     },
     getUserByEmail: async (email) => {
       const user = await db.query.users.findFirst({
-        where: (u, { eq }) => eq(u.email, email),
+        where: (u, { eq }) => eq(u.email, email)
       });
-      return (user as any) ?? null;
+      return (user) ?? null;
     },
     deleteUser: async (userId) => {
       const { eq } = await import("drizzle-orm");
       await db.delete(schema.users).where(eq(schema.users.id, userId));
-    },
+    }
   } as Adapter;
 }
 
@@ -69,7 +69,7 @@ function googleTokens(userId: string): AdapterAccount {
     id_token: "eyJhbGciOiJSUzI1NiJ9_id_token",
     expires_at: Math.floor(Date.now() / 1000) + 3600,
     token_type: "bearer",
-    scope: "openid email profile https://www.googleapis.com/auth/gmail.readonly",
+    scope: "openid email profile https://www.googleapis.com/auth/gmail.readonly"
   };
 }
 
@@ -83,7 +83,7 @@ describe("first sign-in", () => {
   it("creates a user record in the database", async () => {
     await adapter.createUser!(newUser());
 
-    const { rows } = await query(`SELECT * FROM "user" WHERE email = 'lucas@example.com'`);
+    const { rows } = await query("SELECT * FROM \"user\" WHERE email = 'lucas@example.com'");
     expect(rows).toHaveLength(1);
     expect(rows[0].name).toBe("Lucas");
     expect(rows[0].id).toBeDefined();
@@ -94,7 +94,7 @@ describe("first sign-in", () => {
     const user = await adapter.createUser!(newUser());
     await adapter.linkAccount!(googleTokens(user.id));
 
-    const { rows } = await query(`SELECT access_token FROM "account" WHERE "userId" = $1`, [user.id]);
+    const { rows } = await query("SELECT access_token FROM \"account\" WHERE \"userId\" = $1", [user.id]);
     expect(rows[0].access_token).not.toBe("ya29.a0AfH6SMC_access_token");
     expect(decrypt(rows[0].access_token)).toBe("ya29.a0AfH6SMC_access_token");
   });
@@ -103,7 +103,7 @@ describe("first sign-in", () => {
     const user = await adapter.createUser!(newUser());
     await adapter.linkAccount!(googleTokens(user.id));
 
-    const { rows } = await query(`SELECT refresh_token FROM "account" WHERE "userId" = $1`, [user.id]);
+    const { rows } = await query("SELECT refresh_token FROM \"account\" WHERE \"userId\" = $1", [user.id]);
     expect(rows[0].refresh_token).not.toBe("1//0gxyz_refresh_token");
     expect(decrypt(rows[0].refresh_token)).toBe("1//0gxyz_refresh_token");
   });
@@ -112,7 +112,7 @@ describe("first sign-in", () => {
     const user = await adapter.createUser!(newUser());
     await adapter.linkAccount!(googleTokens(user.id));
 
-    const { rows } = await query(`SELECT id_token FROM "account" WHERE "userId" = $1`, [user.id]);
+    const { rows } = await query("SELECT id_token FROM \"account\" WHERE \"userId\" = $1", [user.id]);
     expect(rows[0].id_token).not.toBe("eyJhbGciOiJSUzI1NiJ9_id_token");
     expect(decrypt(rows[0].id_token)).toBe("eyJhbGciOiJSUzI1NiJ9_id_token");
   });
@@ -121,7 +121,7 @@ describe("first sign-in", () => {
     const user = await adapter.createUser!(newUser());
     await adapter.linkAccount!({ ...googleTokens(user.id), refresh_token: undefined });
 
-    const { rows } = await query(`SELECT refresh_token FROM "account" WHERE "userId" = $1`, [user.id]);
+    const { rows } = await query("SELECT refresh_token FROM \"account\" WHERE \"userId\" = $1", [user.id]);
     expect(rows[0].refresh_token).toBeNull();
   });
 
@@ -130,7 +130,7 @@ describe("first sign-in", () => {
     const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     await adapter.createSession!({ sessionToken: "tok_abc123", userId: user.id, expires });
 
-    const { rows } = await query(`SELECT * FROM "session" WHERE "sessionToken" = 'tok_abc123'`);
+    const { rows } = await query("SELECT * FROM \"session\" WHERE \"sessionToken\" = 'tok_abc123'");
     expect(rows).toHaveLength(1);
     expect(rows[0].userId).toBe(user.id);
   });
@@ -149,7 +149,7 @@ describe("duplicate prevention", () => {
     const existing = await adapter.getUserByEmail!("lucas@example.com");
     expect(existing?.id).toBe(user.id);
 
-    const { rows } = await query(`SELECT * FROM "user"`);
+    const { rows } = await query("SELECT * FROM \"user\"");
     expect(rows).toHaveLength(1);
   });
 });
@@ -158,8 +158,8 @@ describe("OAuth error callback", () => {
   // When Google sends ?error=access_denied, NextAuth aborts the flow and never
   // calls our adapter. Nothing should be written to the database.
   it("no user or account is created when OAuth fails before the adapter is called", async () => {
-    const { rows: users } = await query(`SELECT * FROM "user"`);
-    const { rows: accounts } = await query(`SELECT * FROM "account"`);
+    const { rows: users } = await query("SELECT * FROM \"user\"");
+    const { rows: accounts } = await query("SELECT * FROM \"account\"");
     expect(users).toHaveLength(0);
     expect(accounts).toHaveLength(0);
   });
@@ -182,12 +182,12 @@ describe("session handling", () => {
     await adapter.createSession!({
       sessionToken: "expired-tok",
       userId: user.id,
-      expires: new Date(Date.now() - 1000),
+      expires: new Date(Date.now() - 1000)
     });
 
     // Let Postgres compare the timestamp to avoid JS timezone round-trip issues.
     const { rows } = await query(
-      `SELECT expires < NOW() AS is_past FROM "session" WHERE "sessionToken" = 'expired-tok'`,
+      "SELECT expires < NOW() AS is_past FROM \"session\" WHERE \"sessionToken\" = 'expired-tok'"
     );
     expect(rows).toHaveLength(1);
     expect(rows[0].is_past).toBe(true);
@@ -208,8 +208,8 @@ describe("cascade delete", () => {
 
     await adapter.deleteUser!(user.id);
 
-    const { rows: accounts } = await query(`SELECT * FROM "account" WHERE "userId" = $1`, [user.id]);
-    const { rows: sessions } = await query(`SELECT * FROM "session" WHERE "userId" = $1`, [user.id]);
+    const { rows: accounts } = await query("SELECT * FROM \"account\" WHERE \"userId\" = $1", [user.id]);
+    const { rows: sessions } = await query("SELECT * FROM \"session\" WHERE \"userId\" = $1", [user.id]);
     expect(accounts).toHaveLength(0);
     expect(sessions).toHaveLength(0);
   });

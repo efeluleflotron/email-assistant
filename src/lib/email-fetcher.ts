@@ -7,10 +7,10 @@ import { watchGmail } from "@/lib/gmail-watch";
 
 export async function processGmailNotification(
   emailAddress: string,
-  historyId: string,
+  historyId: string
 ): Promise<void> {
   const user = await db.query.users.findFirst({
-    where: (u, { eq }) => eq(u.email, emailAddress),
+    where: (u, { eq }) => eq(u.email, emailAddress)
   });
 
   if (!user) {
@@ -20,12 +20,12 @@ export async function processGmailNotification(
 
   const account = await db.query.accounts.findFirst({
     where: (a, { eq, and }) =>
-      and(eq(a.userId, user.id), eq(a.provider, "google")),
+      and(eq(a.userId, user.id), eq(a.provider, "google"))
   });
 
   if (!account?.access_token) {
     console.warn("[email-fetcher] no google account for user", {
-      userId: user.id,
+      userId: user.id
     });
     return;
   }
@@ -36,7 +36,7 @@ export async function processGmailNotification(
   } catch (err) {
     console.error("[email-fetcher] failed to get access token", {
       userId: user.id,
-      err,
+      err
     });
     return;
   }
@@ -61,20 +61,20 @@ export async function processGmailNotification(
           .where(
             and(
               eq(accounts.provider, account.provider),
-              eq(accounts.providerAccountId, account.providerAccountId),
-            ),
+              eq(accounts.providerAccountId, account.providerAccountId)
+            )
           );
       }
       console.log("[email-fetcher] bootstrapped gmailHistoryId, send another email to test", {
         userId: user.id,
-        gmailHistoryId: watch.historyId,
+        gmailHistoryId: watch.historyId
       });
       return;
     }
     const historyRes = await gmail.users.history.list({
       userId: "me",
       startHistoryId: account.gmailHistoryId,
-      historyTypes: ["messageAdded"],
+      historyTypes: ["messageAdded"]
     });
 
     const historyItems = historyRes.data.history ?? [];
@@ -85,7 +85,7 @@ export async function processGmailNotification(
   } catch (err) {
     console.error("[email-fetcher] history.list failed", {
       userId: user.id,
-      err,
+      err
     });
     return;
   }
@@ -97,8 +97,8 @@ export async function processGmailNotification(
     .where(
       and(
         eq(accounts.provider, account.provider),
-        eq(accounts.providerAccountId, account.providerAccountId),
-      ),
+        eq(accounts.providerAccountId, account.providerAccountId)
+      )
     );
 
   if (messageIds.length === 0) return;
@@ -108,7 +108,7 @@ export async function processGmailNotification(
       const msgRes = await gmail.users.messages.get({
         userId: "me",
         id: messageId,
-        format: "full",
+        format: "full"
       });
 
       const msg = msgRes.data;
@@ -116,7 +116,7 @@ export async function processGmailNotification(
 
       const getHeader = (name: string) =>
         headers.find(
-          (h) => h.name?.toLowerCase() === name.toLowerCase(),
+          (h) => h.name?.toLowerCase() === name.toLowerCase()
         )?.value ?? null;
 
       const from = getHeader("From");
@@ -136,26 +136,26 @@ export async function processGmailNotification(
           toEncrypted: to ? encrypt(to) : null,
           subjectEncrypted: subject ? encrypt(subject) : null,
           bodyEncrypted: body ? encrypt(body) : null,
-          receivedAt,
+          receivedAt
         })
         .onConflictDoNothing();
 
       console.log("[email-fetcher] stored message", {
         userId: user.id,
-        messageId,
+        messageId
       });
     } catch (err) {
       console.error("[email-fetcher] failed to store message", {
         userId: user.id,
         messageId,
-        err,
+        err
       });
     }
   }
 }
 
 async function getAccessToken(
-  account: typeof accounts.$inferSelect,
+  account: typeof accounts.$inferSelect
 ): Promise<string> {
   const plainAccessToken = decrypt(account.access_token!);
 
@@ -174,12 +174,12 @@ async function getAccessToken(
 
   const oauth2 = new google.auth.OAuth2(
     process.env.AUTH_GOOGLE_ID,
-    process.env.AUTH_GOOGLE_SECRET,
+    process.env.AUTH_GOOGLE_SECRET
   );
   oauth2.setCredentials({
     access_token: plainAccessToken,
     refresh_token: plainRefreshToken,
-    expiry_date: account.expires_at ? account.expires_at * 1000 : undefined,
+    expiry_date: account.expires_at ? account.expires_at * 1000 : undefined
   });
 
   const { token, res } = await oauth2.getAccessToken();
@@ -193,20 +193,20 @@ async function getAccessToken(
     .update(accounts)
     .set({
       access_token: encrypt(token),
-      ...(newExpiresAt !== null ? { expires_at: newExpiresAt } : {}),
+      ...(newExpiresAt !== null ? { expires_at: newExpiresAt } : {})
     })
     .where(
       and(
         eq(accounts.provider, account.provider),
-        eq(accounts.providerAccountId, account.providerAccountId),
-      ),
+        eq(accounts.providerAccountId, account.providerAccountId)
+      )
     );
 
   return token;
 }
 
 function extractBody(
-  payload: gmail_v1.Schema$MessagePart | undefined | null,
+  payload: gmail_v1.Schema$MessagePart | undefined | null
 ): string | null {
   if (!payload) return null;
 

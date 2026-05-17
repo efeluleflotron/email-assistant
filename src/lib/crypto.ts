@@ -13,7 +13,7 @@ function getKey(): Buffer {
   const key = Buffer.from(raw, "base64");
   if (key.length !== KEY_BYTES) {
     throw new Error(
-      `MASTER_ENCRYPTION_KEY must decode to ${KEY_BYTES} bytes (got ${key.length})`,
+      `MASTER_ENCRYPTION_KEY must decode to ${KEY_BYTES} bytes (got ${key.length})`
     );
   }
   return key;

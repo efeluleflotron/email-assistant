@@ -23,13 +23,13 @@ export async function POST(req: NextRequest) {
 
   const migrationsFolder = path.join(process.cwd(), "src/db/migrations");
   const journal: Journal = JSON.parse(
-    readFileSync(path.join(migrationsFolder, "meta/_journal.json"), "utf8"),
+    readFileSync(path.join(migrationsFolder, "meta/_journal.json"), "utf8")
   );
 
   let appliedCount = 0;
   try {
     const result = await query(
-      "SELECT count(*)::int AS count FROM drizzle.__drizzle_migrations",
+      "SELECT count(*)::int AS count FROM drizzle.__drizzle_migrations"
     );
     appliedCount = result.rows[0].count;
   } catch {

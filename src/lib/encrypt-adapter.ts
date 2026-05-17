@@ -11,7 +11,7 @@ function encryptAccountTokens(account: AdapterAccount): AdapterAccount {
     ...account,
     access_token: maybeEncrypt(account.access_token),
     refresh_token: maybeEncrypt(account.refresh_token),
-    id_token: maybeEncrypt(account.id_token),
+    id_token: maybeEncrypt(account.id_token)
   };
 }
 
@@ -23,10 +23,10 @@ export function makeEncryptingAdapter(base: Adapter): Adapter {
         dispatchGmailWatch(account.access_token, {
           userId: account.userId,
           provider: account.provider,
-          providerAccountId: account.providerAccountId,
+          providerAccountId: account.providerAccountId
         });
       }
       return base.linkAccount!(encryptAccountTokens(account));
-    },
+    }
   };
 }

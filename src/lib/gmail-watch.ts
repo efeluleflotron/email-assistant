@@ -25,8 +25,8 @@ export async function watchGmail(accessToken: string): Promise<GmailWatchRespons
     userId: "me",
     requestBody: {
       labelIds: ["INBOX"],
-      topicName,
-    },
+      topicName
+    }
   });
 
   return res.data;
@@ -40,7 +40,7 @@ export async function watchGmail(accessToken: string): Promise<GmailWatchRespons
  */
 export function dispatchGmailWatch(
   accessToken: string,
-  ctx: { userId: string; provider: string; providerAccountId: string },
+  ctx: { userId: string; provider: string; providerAccountId: string }
 ): void {
   if (process.env.NODE_ENV === "test") return;
 
@@ -49,7 +49,7 @@ export function dispatchGmailWatch(
       console.log("[gmail-watch] subscribed", {
         userId: ctx.userId,
         historyId: watch.historyId,
-        expiration: watch.expiration,
+        expiration: watch.expiration
       });
 
       if (watch.historyId) {
@@ -59,15 +59,15 @@ export function dispatchGmailWatch(
           .where(
             and(
               eq(accounts.provider, ctx.provider),
-              eq(accounts.providerAccountId, ctx.providerAccountId),
-            ),
+              eq(accounts.providerAccountId, ctx.providerAccountId)
+            )
           );
       }
     })
     .catch((err) => {
       console.error("[gmail-watch] failed to subscribe", {
         userId: ctx.userId,
-        err,
+        err
       });
     });
 }

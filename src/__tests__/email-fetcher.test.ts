@@ -14,7 +14,7 @@ jest.mock("googleapis", () => {
   const getAccessToken = jest.fn();
   const OAuth2 = jest.fn().mockImplementation(() => ({
     setCredentials,
-    getAccessToken,
+    getAccessToken
   }));
 
   return {
@@ -23,10 +23,10 @@ jest.mock("googleapis", () => {
       gmail: jest.fn().mockReturnValue({
         users: {
           history: { list: historyList },
-          messages: { get: messagesGet },
-        },
-      }),
-    },
+          messages: { get: messagesGet }
+        }
+      })
+    }
   };
 });
 
@@ -34,8 +34,8 @@ jest.mock("googleapis", () => {
 jest.mock("@/lib/crypto", () => ({
   encrypt: jest.fn((s: string) => `enc:${s}`),
   decrypt: jest.fn((s: string) =>
-    s.startsWith("enc:") ? s.slice(4) : s,
-  ),
+    s.startsWith("enc:") ? s.slice(4) : s
+  )
 }));
 
 // ── DB mock ──────────────────────────────────────────────────────────────────
@@ -55,25 +55,25 @@ jest.mock("@/db/client", () => {
     db: {
       query: {
         users: { findFirst: findFirstUser },
-        accounts: { findFirst: findFirstAccount },
+        accounts: { findFirst: findFirstAccount }
       },
       insert,
-      update,
+      update
     },
-    pool: { end: jest.fn() },
+    pool: { end: jest.fn() }
   };
 });
 
 // ── gmail-watch mock ─────────────────────────────────────────────────────────
 jest.mock("@/lib/gmail-watch", () => ({
-  watchGmail: jest.fn().mockResolvedValue({ historyId: "99999" }),
+  watchGmail: jest.fn().mockResolvedValue({ historyId: "99999" })
 }));
 
 // ── schema mock — only needed so drizzle helpers resolve symbols ─────────────
 jest.mock("@/db/schema", () => ({
   users: {},
   accounts: { userId: "userId", provider: "provider", providerAccountId: "providerAccountId" },
-  emails: {},
+  emails: {}
 }));
 
 import { processGmailNotification } from "@/lib/email-fetcher";
@@ -85,8 +85,8 @@ function getMocks() {
   const gmailInstance = (google.gmail as jest.Mock).mock.results[0]?.value ?? {
     users: {
       history: { list: jest.fn() },
-      messages: { get: jest.fn() },
-    },
+      messages: { get: jest.fn() }
+    }
   };
   // Re-fetch after each gmail() call
   const latestGmail = () => {
@@ -106,7 +106,7 @@ function getMocks() {
     dbInsert: db.insert as jest.Mock,
     dbUpdate: db.update as jest.Mock,
     findUser: db.query.users.findFirst as jest.Mock,
-    findAccount: db.query.accounts.findFirst as jest.Mock,
+    findAccount: db.query.accounts.findFirst as jest.Mock
   };
 }
 
@@ -118,7 +118,7 @@ const VALID_ACCOUNT = {
   access_token: "enc:valid-token",
   refresh_token: "enc:refresh-token",
   expires_at: Math.floor(Date.now() / 1000) + 3600, // valid for 1 hour
-  gmailHistoryId: "12345",
+  gmailHistoryId: "12345"
 };
 
 function makeMessage(id: string) {
@@ -131,13 +131,13 @@ function makeMessage(id: string) {
           { name: "From", value: "sender@example.com" },
           { name: "To", value: "me@example.com" },
           { name: "Subject", value: "Hello world" },
-          { name: "Date", value: "Mon, 13 May 2026 12:00:00 +0000" },
+          { name: "Date", value: "Mon, 13 May 2026 12:00:00 +0000" }
         ],
         body: {
-          data: Buffer.from("Email body text").toString("base64url"),
-        },
-      },
-    },
+          data: Buffer.from("Email body text").toString("base64url")
+        }
+      }
+    }
   };
 }
 
@@ -145,9 +145,9 @@ function makeHistoryResponse(messageIds: string[]) {
   return {
     data: {
       history: messageIds.map((id) => ({
-        messagesAdded: [{ message: { id } }],
-      })),
-    },
+        messagesAdded: [{ message: { id } }]
+      }))
+    }
   };
 }
 
@@ -157,8 +157,8 @@ beforeEach(() => {
   (google.gmail as jest.Mock).mockReturnValue({
     users: {
       history: { list: jest.fn() },
-      messages: { get: jest.fn() },
-    },
+      messages: { get: jest.fn() }
+    }
   });
 });
 
@@ -168,7 +168,7 @@ describe("processGmailNotification", () => {
     (db.query.users.findFirst as jest.Mock).mockResolvedValue(undefined);
 
     await expect(
-      processGmailNotification("nobody@example.com", "12345"),
+      processGmailNotification("nobody@example.com", "12345")
     ).resolves.toBeUndefined();
 
     expect(db.insert).not.toHaveBeenCalled();
@@ -179,7 +179,7 @@ describe("processGmailNotification", () => {
     (db.query.accounts.findFirst as jest.Mock).mockResolvedValue(undefined);
 
     await expect(
-      processGmailNotification("test@example.com", "12345"),
+      processGmailNotification("test@example.com", "12345")
     ).resolves.toBeUndefined();
 
     expect(db.insert).not.toHaveBeenCalled();
@@ -189,9 +189,9 @@ describe("processGmailNotification", () => {
     (db.query.users.findFirst as jest.Mock).mockResolvedValue(VALID_USER);
     (db.query.accounts.findFirst as jest.Mock).mockResolvedValue(VALID_ACCOUNT);
 
-    const gmail = google.gmail({ version: "v1" } as any);
+    const gmail = google.gmail({ version: "v1" });
     (gmail.users.history.list as jest.Mock).mockResolvedValue({
-      data: { history: [] },
+      data: { history: [] }
     });
 
     await processGmailNotification("test@example.com", "12345");
@@ -203,9 +203,9 @@ describe("processGmailNotification", () => {
     (db.query.users.findFirst as jest.Mock).mockResolvedValue(VALID_USER);
     (db.query.accounts.findFirst as jest.Mock).mockResolvedValue(VALID_ACCOUNT);
 
-    const gmail = google.gmail({ version: "v1" } as any);
+    const gmail = google.gmail({ version: "v1" });
     (gmail.users.history.list as jest.Mock).mockResolvedValue(
-      makeHistoryResponse(["msg-1", "msg-2"]),
+      makeHistoryResponse(["msg-1", "msg-2"])
     );
     (gmail.users.messages.get as jest.Mock)
       .mockResolvedValueOnce(makeMessage("msg-1"))
@@ -228,16 +228,16 @@ describe("processGmailNotification", () => {
     (db.query.users.findFirst as jest.Mock).mockResolvedValue(VALID_USER);
     (db.query.accounts.findFirst as jest.Mock).mockResolvedValue(VALID_ACCOUNT);
 
-    const gmail = google.gmail({ version: "v1" } as any);
+    const gmail = google.gmail({ version: "v1" });
     (gmail.users.history.list as jest.Mock).mockResolvedValue(
-      makeHistoryResponse(["msg-ok", "msg-fail"]),
+      makeHistoryResponse(["msg-ok", "msg-fail"])
     );
     (gmail.users.messages.get as jest.Mock)
       .mockResolvedValueOnce(makeMessage("msg-ok"))
       .mockRejectedValueOnce(new Error("API error"));
 
     await expect(
-      processGmailNotification("test@example.com", "12345"),
+      processGmailNotification("test@example.com", "12345")
     ).resolves.toBeUndefined();
 
     // The successful message should still be stored
@@ -248,13 +248,13 @@ describe("processGmailNotification", () => {
     (db.query.users.findFirst as jest.Mock).mockResolvedValue(VALID_USER);
     (db.query.accounts.findFirst as jest.Mock).mockResolvedValue(VALID_ACCOUNT);
 
-    const gmail = google.gmail({ version: "v1" } as any);
+    const gmail = google.gmail({ version: "v1" });
     (gmail.users.history.list as jest.Mock).mockRejectedValue(
-      new Error("Network error"),
+      new Error("Network error")
     );
 
     await expect(
-      processGmailNotification("test@example.com", "12345"),
+      processGmailNotification("test@example.com", "12345")
     ).resolves.toBeUndefined();
 
     expect(db.insert).not.toHaveBeenCalled();
@@ -263,7 +263,7 @@ describe("processGmailNotification", () => {
   it("refreshes the token when it is expired and retries with the new token", async () => {
     const expiredAccount = {
       ...VALID_ACCOUNT,
-      expires_at: Math.floor(Date.now() / 1000) - 60, // expired 1 minute ago
+      expires_at: Math.floor(Date.now() / 1000) - 60 // expired 1 minute ago
     };
 
     (db.query.users.findFirst as jest.Mock).mockResolvedValue(VALID_USER);
@@ -275,16 +275,16 @@ describe("processGmailNotification", () => {
       setCredentials: jest.fn(),
       getAccessToken: jest.fn().mockResolvedValue({
         token: "new-token",
-        res: { data: { expiry_date: newExpiry * 1000 } },
-      }),
+        res: { data: { expiry_date: newExpiry * 1000 } }
+      })
     }));
 
-    const gmail = google.gmail({ version: "v1" } as any);
+    const gmail = google.gmail({ version: "v1" });
     (gmail.users.history.list as jest.Mock).mockResolvedValue(
-      makeHistoryResponse(["msg-1"]),
+      makeHistoryResponse(["msg-1"])
     );
     (gmail.users.messages.get as jest.Mock).mockResolvedValue(
-      makeMessage("msg-1"),
+      makeMessage("msg-1")
     );
 
     await processGmailNotification("test@example.com", "12345");

@@ -5,7 +5,7 @@ describe("formatEmailSubject", () => {
     expect(formatEmailSubject("  Hello World  ")).toBe("Hello World");
   });
 
-  it('returns "(no subject)" for blank strings', () => {
+  it("returns \"(no subject)\" for blank strings", () => {
     expect(formatEmailSubject("")).toBe("(no subject)");
     expect(formatEmailSubject("   ")).toBe("(no subject)");
   });

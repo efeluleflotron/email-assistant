@@ -12,7 +12,32 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // CJS config files that must use require()
+    "jest.config.js",
+    "jest.global-setup.js"
   ]),
+  {
+    rules: {
+      "no-unused-vars": ["warn", {
+        "varsIgnorePattern": "^_",
+        "argsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }],
+      "semi": ["error", "always"],
+      "indent": ["error", 2],
+      "quotes": ["error", "double"],
+      "brace-style": ["error", "1tbs"],
+      "comma-dangle": ["error", "never"],
+      "arrow-parens": ["error", "always"],
+      "object-curly-spacing": ["error", "always"],
+      "max-len": ["error", {
+        "code": 100,
+        "ignoreUrls": true,
+        "ignoreStrings": true,
+        "ignoreTemplateLiterals": true
+      }]
+    }
+  }
 ]);
 
 export default eslintConfig;

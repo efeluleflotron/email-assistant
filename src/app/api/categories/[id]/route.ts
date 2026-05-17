@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   const userId = session?.user?.id;
@@ -19,7 +19,7 @@ export async function PATCH(
   const { id } = await params;
 
   const existing = await db.query.categories.findFirst({
-    where: (c, { eq }) => eq(c.id, id),
+    where: (c, { eq }) => eq(c.id, id)
   });
 
   if (!existing) {
@@ -49,11 +49,12 @@ export async function PATCH(
       .returning();
 
     return NextResponse.json(updated);
-  } catch (err: any) {
-    if ((err?.code ?? err?.cause?.code) === "23505") {
+  } catch (err) {
+    const e = err as { code?: string; cause?: { code?: string } };
+    if ((e?.code ?? e?.cause?.code) === "23505") {
       return NextResponse.json(
         { error: "a category with that name already exists" },
-        { status: 409 },
+        { status: 409 }
       );
     }
     throw err;
@@ -62,7 +63,7 @@ export async function PATCH(
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   const userId = session?.user?.id;
@@ -73,7 +74,7 @@ export async function DELETE(
   const { id } = await params;
 
   const existing = await db.query.categories.findFirst({
-    where: (c, { eq }) => eq(c.id, id),
+    where: (c, { eq }) => eq(c.id, id)
   });
 
   if (!existing) {

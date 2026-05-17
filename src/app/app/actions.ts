@@ -10,7 +10,7 @@ export type ActionState = { ok: true } | { ok: false; error: string } | null;
 
 export async function upsertCategory(
   _prev: ActionState,
-  formData: FormData,
+  formData: FormData
 ): Promise<ActionState> {
   const session = await auth();
   const userId = session?.user?.id;
@@ -28,7 +28,7 @@ export async function upsertCategory(
   try {
     if (id) {
       const existing = await db.query.categories.findFirst({
-        where: (c, { eq }) => eq(c.id, id),
+        where: (c, { eq }) => eq(c.id, id)
       });
       if (!existing) return { ok: false, error: "Not found" };
       if (existing.userId !== userId) return { ok: false, error: "Forbidden" };
@@ -42,8 +42,9 @@ export async function upsertCategory(
     }
     revalidatePath("/app");
     return { ok: true };
-  } catch (err: any) {
-    if ((err?.code ?? err?.cause?.code) === "23505") {
+  } catch (err) {
+    const e = err as { code?: string; cause?: { code?: string } };
+    if ((e?.code ?? e?.cause?.code) === "23505") {
       return { ok: false, error: "A category with that name already exists" };
     }
     throw err;
@@ -52,7 +53,7 @@ export async function upsertCategory(
 
 export async function deleteCategory(
   _prev: ActionState,
-  formData: FormData,
+  formData: FormData
 ): Promise<ActionState> {
   const session = await auth();
   const userId = session?.user?.id;
@@ -62,7 +63,7 @@ export async function deleteCategory(
   if (!id) return { ok: false, error: "Missing id" };
 
   const existing = await db.query.categories.findFirst({
-    where: (c, { eq }) => eq(c.id, id),
+    where: (c, { eq }) => eq(c.id, id)
   });
   if (!existing) return { ok: false, error: "Not found" };
   if (existing.userId !== userId) return { ok: false, error: "Forbidden" };

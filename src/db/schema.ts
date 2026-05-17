@@ -4,7 +4,7 @@ import {
   primaryKey,
   text,
   timestamp,
-  uniqueIndex,
+  uniqueIndex
 } from "drizzle-orm/pg-core";
 import type { AdapterAccountType } from "next-auth/adapters";
 
@@ -16,7 +16,7 @@ export const users = pgTable("user", {
   email: text("email").unique(),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
-  createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+  createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow()
 });
 
 export const accounts = pgTable(
@@ -35,9 +35,9 @@ export const accounts = pgTable(
     scope: text("scope"),
     id_token: text("id_token"),
     session_state: text("session_state"),
-    gmailHistoryId: text("gmailHistoryId"),
+    gmailHistoryId: text("gmailHistoryId")
   },
-  (t) => [primaryKey({ columns: [t.provider, t.providerAccountId] })],
+  (t) => [primaryKey({ columns: [t.provider, t.providerAccountId] })]
 );
 
 export const sessions = pgTable("session", {
@@ -45,7 +45,7 @@ export const sessions = pgTable("session", {
   userId: text("userId")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  expires: timestamp("expires", { mode: "date" }).notNull(),
+  expires: timestamp("expires", { mode: "date" }).notNull()
 });
 
 export const emails = pgTable(
@@ -64,9 +64,9 @@ export const emails = pgTable(
     subjectEncrypted: text("subjectEncrypted"),
     bodyEncrypted: text("bodyEncrypted"),
     receivedAt: timestamp("receivedAt", { mode: "date" }),
-    createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+    createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow()
   },
-  (t) => [uniqueIndex("email_user_msg_idx").on(t.userId, t.gmailMessageId)],
+  (t) => [uniqueIndex("email_user_msg_idx").on(t.userId, t.gmailMessageId)]
 );
 
 export const categories = pgTable(
@@ -82,9 +82,9 @@ export const categories = pgTable(
     description: text("description").notNull(),
     color: text("color"),
     createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
-    updatedAt: timestamp("updatedAt", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt", { mode: "date" }).notNull().defaultNow()
   },
-  (t) => [uniqueIndex("category_user_name_idx").on(t.userId, t.name)],
+  (t) => [uniqueIndex("category_user_name_idx").on(t.userId, t.name)]
 );
 
 export const emailCategories = pgTable(
@@ -95,7 +95,7 @@ export const emailCategories = pgTable(
       .references(() => emails.id, { onDelete: "cascade" }),
     categoryId: text("categoryId")
       .notNull()
-      .references(() => categories.id, { onDelete: "cascade" }),
+      .references(() => categories.id, { onDelete: "cascade" })
   },
-  (t) => [primaryKey({ columns: [t.emailId, t.categoryId] })],
+  (t) => [primaryKey({ columns: [t.emailId, t.categoryId] })]
 );

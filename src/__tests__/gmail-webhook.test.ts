@@ -11,18 +11,18 @@
 // email-fetcher imports googleapis (ESM-only), which can't be loaded without a
 // proper mock in this test environment. Stub it so only auth logic is tested here.
 jest.mock("@/lib/email-fetcher", () => ({
-  processGmailNotification: jest.fn().mockResolvedValue(undefined),
+  processGmailNotification: jest.fn().mockResolvedValue(undefined)
 }));
 
 jest.mock("next/server", () => ({
   ...jest.requireActual("next/server"),
-  after: jest.fn((p: Promise<unknown>) => p.catch(() => {})),
+  after: jest.fn((p: Promise<unknown>) => p.catch(() => {}))
 }));
 
 jest.mock("google-auth-library", () => ({
   OAuth2Client: jest.fn().mockImplementation(() => ({
-    verifyIdToken: jest.fn(),
-  })),
+    verifyIdToken: jest.fn()
+  }))
 }));
 
 import { OAuth2Client } from "google-auth-library";
@@ -34,22 +34,22 @@ const SA_EMAIL = "email-service@vast-verve-494300-j8.iam.gserviceaccount.com";
 const VALID_PAYLOAD = {
   message: {
     data: Buffer.from(
-      JSON.stringify({ emailAddress: "user@example.com", historyId: "12345" }),
+      JSON.stringify({ emailAddress: "user@example.com", historyId: "12345" })
     ).toString("base64"),
     messageId: "msg-1",
-    publishTime: "2026-05-13T00:00:00Z",
+    publishTime: "2026-05-13T00:00:00Z"
   },
-  subscription: "projects/vast-verve-494300-j8/subscriptions/gmail-sub",
+  subscription: "projects/vast-verve-494300-j8/subscriptions/gmail-sub"
 };
 
 function makeRequest(
   body: unknown,
-  headers: Record<string, string> = {},
+  headers: Record<string, string> = {}
 ): NextRequest {
   return new NextRequest("http://localhost/api/webhooks/gmail", {
     method: "POST",
     headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify(body),
+    body: JSON.stringify(body)
   });
 }
 
@@ -59,8 +59,9 @@ let mockVerifyIdToken: jest.Mock;
 
 beforeAll(() => {
   // mock.results[0].value is the object returned by the first constructor call
-  mockVerifyIdToken = (jest.mocked(OAuth2Client).mock.results[0].value as any)
-    .verifyIdToken;
+  mockVerifyIdToken = (
+    jest.mocked(OAuth2Client).mock.results[0].value as { verifyIdToken: jest.Mock }
+  ).verifyIdToken;
 });
 
 beforeEach(() => {
@@ -94,7 +95,7 @@ describe("OIDC token verification", () => {
 
   it("returns 401 when Authorization header is not Bearer", async () => {
     const res = await POST(
-      makeRequest(VALID_PAYLOAD, { Authorization: "Basic dXNlcjpwYXNz" }),
+      makeRequest(VALID_PAYLOAD, { Authorization: "Basic dXNlcjpwYXNz" })
     );
     expect(res.status).toBe(401);
     expect(mockVerifyIdToken).not.toHaveBeenCalled();
@@ -110,8 +111,8 @@ describe("OIDC token verification", () => {
     mockVerifyIdToken.mockResolvedValueOnce({
       getPayload: () => ({
         email: "other-sa@other-project.iam.gserviceaccount.com",
-        email_verified: true,
-      }),
+        email_verified: true
+      })
     });
     const res = await POST(makeRequest(VALID_PAYLOAD, { Authorization: "Bearer tok" }));
     expect(res.status).toBe(401);
@@ -119,7 +120,7 @@ describe("OIDC token verification", () => {
 
   it("returns 401 when token email_verified is false", async () => {
     mockVerifyIdToken.mockResolvedValueOnce({
-      getPayload: () => ({ email: SA_EMAIL, email_verified: false }),
+      getPayload: () => ({ email: SA_EMAIL, email_verified: false })
     });
     const res = await POST(makeRequest(VALID_PAYLOAD, { Authorization: "Bearer tok" }));
     expect(res.status).toBe(401);
@@ -130,7 +131,7 @@ describe("OIDC token verification", () => {
     await POST(makeRequest(VALID_PAYLOAD, { Authorization: "Bearer tok" }));
     expect(mockVerifyIdToken).toHaveBeenCalledWith({
       idToken: "tok",
-      audience: "https://example.com/api/webhooks/gmail",
+      audience: "https://example.com/api/webhooks/gmail"
     });
   });
 });
@@ -149,7 +150,7 @@ describe("payload handling (auth passes)", () => {
     const req = new NextRequest("http://localhost/api/webhooks/gmail", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: "Bearer tok" },
-      body: "not-json",
+      body: "not-json"
     });
     const res = await POST(req);
     expect(res.status).toBe(204);
@@ -159,8 +160,8 @@ describe("payload handling (auth passes)", () => {
     const res = await POST(
       makeRequest(
         { subscription: "projects/x/subscriptions/y" },
-        { Authorization: "Bearer tok" },
-      ),
+        { Authorization: "Bearer tok" }
+      )
     );
     expect(res.status).toBe(204);
   });
@@ -169,8 +170,8 @@ describe("payload handling (auth passes)", () => {
     const res = await POST(
       makeRequest(
         { message: { data: "$$not-base64$$", messageId: "1" } },
-        { Authorization: "Bearer tok" },
-      ),
+        { Authorization: "Bearer tok" }
+      )
     );
     expect(res.status).toBe(204);
   });

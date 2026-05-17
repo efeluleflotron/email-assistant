@@ -13,20 +13,20 @@ function req(body: object, secret = process.env.MIGRATE_SECRET) {
     method: "POST",
     headers: {
       authorization: `Bearer ${secret}`,
-      "content-type": "application/json",
+      "content-type": "application/json"
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify(body)
   });
 }
 
 async function cleanDatabase() {
   await query("DROP SCHEMA IF EXISTS drizzle CASCADE");
-  await query('DROP TABLE IF EXISTS "email_category" CASCADE');
-  await query('DROP TABLE IF EXISTS "email" CASCADE');
-  await query('DROP TABLE IF EXISTS "category" CASCADE');
-  await query('DROP TABLE IF EXISTS "session" CASCADE');
-  await query('DROP TABLE IF EXISTS "account" CASCADE');
-  await query('DROP TABLE IF EXISTS "user" CASCADE');
+  await query("DROP TABLE IF EXISTS \"email_category\" CASCADE");
+  await query("DROP TABLE IF EXISTS \"email\" CASCADE");
+  await query("DROP TABLE IF EXISTS \"category\" CASCADE");
+  await query("DROP TABLE IF EXISTS \"session\" CASCADE");
+  await query("DROP TABLE IF EXISTS \"account\" CASCADE");
+  await query("DROP TABLE IF EXISTS \"user\" CASCADE");
 }
 
 // ─── tests ────────────────────────────────────────────────────────────────────
@@ -61,7 +61,7 @@ describe("POST /api/admin/migrate", () => {
 
     // The drizzle schema must not exist — dry run is a read-only operation.
     await expect(
-      query("SELECT 1 FROM drizzle.__drizzle_migrations"),
+      query("SELECT 1 FROM drizzle.__drizzle_migrations")
     ).rejects.toThrow();
   });
 
@@ -73,7 +73,7 @@ describe("POST /api/admin/migrate", () => {
     expect(body.ran).toEqual(["0000_core_tables", "0001_email_and_categories", "0002_gmail_history_id"]);
 
     const result = await query(
-      "SELECT count(*)::int AS count FROM drizzle.__drizzle_migrations",
+      "SELECT count(*)::int AS count FROM drizzle.__drizzle_migrations"
     );
     expect(result.rows[0].count).toBe(3);
   });
@@ -87,7 +87,7 @@ describe("POST /api/admin/migrate", () => {
     expect(body.ran).toEqual([]);
 
     const result = await query(
-      "SELECT count(*)::int AS count FROM drizzle.__drizzle_migrations",
+      "SELECT count(*)::int AS count FROM drizzle.__drizzle_migrations"
     );
     expect(result.rows[0].count).toBe(3);
   });

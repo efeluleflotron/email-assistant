@@ -8,7 +8,7 @@ import { makeEncryptingAdapter } from "@/lib/encrypt-adapter";
 const baseAdapter = DrizzleAdapter(db, {
   usersTable: users,
   accountsTable: accounts,
-  sessionsTable: sessions,
+  sessionsTable: sessions
 });
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -23,12 +23,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           scope:
             "openid email profile https://www.googleapis.com/auth/gmail.readonly",
           access_type: "offline",
-          prompt: "consent",
-        },
-      },
-    }),
+          prompt: "consent"
+        }
+      }
+    })
   ],
   pages: {
-    signIn: "/login",
-  },
+    signIn: "/login"
+  }
 });

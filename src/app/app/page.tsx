@@ -11,9 +11,9 @@ export default async function AppHome() {
   const userId = session.user.id;
   const userCategories = userId
     ? await db.query.categories.findMany({
-        where: (c, { eq }) => eq(c.userId, userId),
-        orderBy: (c, { asc }) => [asc(c.createdAt)],
-      })
+      where: (c, { eq }) => eq(c.userId, userId),
+      orderBy: (c, { asc }) => [asc(c.createdAt)]
+    })
     : [];
 
   return (

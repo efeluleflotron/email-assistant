@@ -53,7 +53,7 @@ async function verifyPubSubToken(req: NextRequest): Promise<boolean> {
     if (!payload?.email_verified || payload.email !== saEmail) {
       console.error("[gmail-webhook] token email mismatch", {
         got: payload?.email,
-        expected: saEmail,
+        expected: saEmail
       });
       return false;
     }
@@ -97,17 +97,17 @@ export async function POST(req: NextRequest) {
     historyId: notification.historyId,
     messageId: envelope.message?.messageId,
     publishTime: envelope.message?.publishTime,
-    subscription: envelope.subscription,
+    subscription: envelope.subscription
   });
 
   if (notification.emailAddress && notification.historyId) {
     after(
       processGmailNotification(
         notification.emailAddress,
-        notification.historyId,
+        notification.historyId
       ).catch((err) =>
-        console.error("[gmail-webhook] processGmailNotification failed", err),
-      ),
+        console.error("[gmail-webhook] processGmailNotification failed", err)
+      )
     );
   }
 

@@ -8,7 +8,7 @@
  */
 
 jest.mock("@/auth", () => ({
-  auth: jest.fn(),
+  auth: jest.fn()
 }));
 
 import { auth } from "@/auth";
@@ -29,12 +29,12 @@ function session(user: { id: string; email: string }) {
 function makeRequest(
   url: string,
   method: string,
-  body?: unknown,
+  body?: unknown
 ): NextRequest {
   return new NextRequest(url, {
     method,
     headers: { "Content-Type": "application/json" },
-    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    ...(body !== undefined ? { body: JSON.stringify(body) } : {})
   });
 }
 
@@ -43,14 +43,14 @@ beforeAll(runMigrations);
 
 beforeEach(async () => {
   await query(
-    'TRUNCATE "email_category", "email", "category", "session", "account", "user" CASCADE',
+    "TRUNCATE \"email_category\", \"email\", \"category\", \"session\", \"account\", \"user\" CASCADE"
   );
   // Seed two test users so FK constraints on categories are satisfied
   await db
     .insert(schema.users)
     .values([
       { id: USER_1.id, email: USER_1.email },
-      { id: USER_2.id, email: USER_2.email },
+      { id: USER_2.id, email: USER_2.email }
     ]);
 });
 
@@ -73,7 +73,7 @@ describe("GET /api/categories", () => {
     // Insert one category per user
     await db.insert(schema.categories).values([
       { userId: USER_1.id, name: "Work", description: "Work emails" },
-      { userId: USER_2.id, name: "Personal", description: "Personal emails" },
+      { userId: USER_2.id, name: "Personal", description: "Personal emails" }
     ]);
 
     (auth as jest.Mock).mockResolvedValue(session(USER_1));
@@ -94,8 +94,8 @@ describe("POST /api/categories", () => {
       makeRequest(
         "http://localhost/api/categories",
         "POST",
-        { name: "Finance", description: "Bank emails" },
-      ),
+        { name: "Finance", description: "Bank emails" }
+      )
     );
     expect(res.status).toBe(401);
   });
@@ -105,13 +105,13 @@ describe("POST /api/categories", () => {
 
     const noName = await POST(
       makeRequest("http://localhost/api/categories", "POST", {
-        description: "desc",
-      }),
+        description: "desc"
+      })
     );
     expect(noName.status).toBe(400);
 
     const noDesc = await POST(
-      makeRequest("http://localhost/api/categories", "POST", { name: "X" }),
+      makeRequest("http://localhost/api/categories", "POST", { name: "X" })
     );
     expect(noDesc.status).toBe(400);
   });
@@ -122,8 +122,8 @@ describe("POST /api/categories", () => {
       makeRequest("http://localhost/api/categories", "POST", {
         name: "Finance",
         description: "Bank emails",
-        color: "#ff0000",
-      }),
+        color: "#ff0000"
+      })
     );
     expect(res.status).toBe(201);
     const body = await res.json();
@@ -139,14 +139,14 @@ describe("POST /api/categories", () => {
     await POST(
       makeRequest("http://localhost/api/categories", "POST", {
         name: "Finance",
-        description: "Bank emails",
-      }),
+        description: "Bank emails"
+      })
     );
     const dup = await POST(
       makeRequest("http://localhost/api/categories", "POST", {
         name: "Finance",
-        description: "Another bank",
-      }),
+        description: "Another bank"
+      })
     );
     expect(dup.status).toBe(409);
   });
@@ -156,16 +156,16 @@ describe("POST /api/categories", () => {
     const r1 = await POST(
       makeRequest("http://localhost/api/categories", "POST", {
         name: "Finance",
-        description: "desc",
-      }),
+        description: "desc"
+      })
     );
 
     (auth as jest.Mock).mockResolvedValue(session(USER_2));
     const r2 = await POST(
       makeRequest("http://localhost/api/categories", "POST", {
         name: "Finance",
-        description: "desc",
-      }),
+        description: "desc"
+      })
     );
 
     expect(r1.status).toBe(201);
@@ -187,7 +187,7 @@ describe("PATCH /api/categories/[id]", () => {
     (auth as jest.Mock).mockResolvedValue(null);
     const res = await PATCH(
       makeRequest("http://localhost/api/categories/x", "PATCH", { name: "X" }),
-      { params: Promise.resolve({ id: "x" }) },
+      { params: Promise.resolve({ id: "x" }) }
     );
     expect(res.status).toBe(401);
   });
@@ -196,9 +196,9 @@ describe("PATCH /api/categories/[id]", () => {
     (auth as jest.Mock).mockResolvedValue(session(USER_1));
     const res = await PATCH(
       makeRequest("http://localhost/api/categories/nonexistent", "PATCH", {
-        name: "X",
+        name: "X"
       }),
-      { params: Promise.resolve({ id: "nonexistent" }) },
+      { params: Promise.resolve({ id: "nonexistent" }) }
     );
     expect(res.status).toBe(404);
   });
@@ -208,9 +208,9 @@ describe("PATCH /api/categories/[id]", () => {
     (auth as jest.Mock).mockResolvedValue(session(USER_1));
     const res = await PATCH(
       makeRequest(`http://localhost/api/categories/${cat.id}`, "PATCH", {
-        name: "X",
+        name: "X"
       }),
-      { params: Promise.resolve({ id: cat.id }) },
+      { params: Promise.resolve({ id: cat.id }) }
     );
     expect(res.status).toBe(403);
   });
@@ -222,9 +222,9 @@ describe("PATCH /api/categories/[id]", () => {
       makeRequest(`http://localhost/api/categories/${cat.id}`, "PATCH", {
         name: "Updated",
         description: "New desc",
-        color: "#0000ff",
+        color: "#0000ff"
       }),
-      { params: Promise.resolve({ id: cat.id }) },
+      { params: Promise.resolve({ id: cat.id }) }
     );
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -240,9 +240,9 @@ describe("PATCH /api/categories/[id]", () => {
     (auth as jest.Mock).mockResolvedValue(session(USER_1));
     const res = await PATCH(
       makeRequest(`http://localhost/api/categories/${cat2.id}`, "PATCH", {
-        name: "Work",
+        name: "Work"
       }),
-      { params: Promise.resolve({ id: cat2.id }) },
+      { params: Promise.resolve({ id: cat2.id }) }
     );
     expect(res.status).toBe(409);
   });
@@ -262,7 +262,7 @@ describe("DELETE /api/categories/[id]", () => {
     (auth as jest.Mock).mockResolvedValue(null);
     const res = await DELETE(
       makeRequest("http://localhost/api/categories/x", "DELETE"),
-      { params: Promise.resolve({ id: "x" }) },
+      { params: Promise.resolve({ id: "x" }) }
     );
     expect(res.status).toBe(401);
   });
@@ -271,7 +271,7 @@ describe("DELETE /api/categories/[id]", () => {
     (auth as jest.Mock).mockResolvedValue(session(USER_1));
     const res = await DELETE(
       makeRequest("http://localhost/api/categories/nonexistent", "DELETE"),
-      { params: Promise.resolve({ id: "nonexistent" }) },
+      { params: Promise.resolve({ id: "nonexistent" }) }
     );
     expect(res.status).toBe(404);
   });
@@ -281,7 +281,7 @@ describe("DELETE /api/categories/[id]", () => {
     (auth as jest.Mock).mockResolvedValue(session(USER_1));
     const res = await DELETE(
       makeRequest(`http://localhost/api/categories/${cat.id}`, "DELETE"),
-      { params: Promise.resolve({ id: cat.id }) },
+      { params: Promise.resolve({ id: cat.id }) }
     );
     expect(res.status).toBe(403);
   });
@@ -292,14 +292,14 @@ describe("DELETE /api/categories/[id]", () => {
 
     const res = await DELETE(
       makeRequest(`http://localhost/api/categories/${cat.id}`, "DELETE"),
-      { params: Promise.resolve({ id: cat.id }) },
+      { params: Promise.resolve({ id: cat.id }) }
     );
     expect(res.status).toBe(204);
 
     // Confirm it's gone
     const res2 = await DELETE(
       makeRequest(`http://localhost/api/categories/${cat.id}`, "DELETE"),
-      { params: Promise.resolve({ id: cat.id }) },
+      { params: Promise.resolve({ id: cat.id }) }
     );
     expect(res2.status).toBe(404);
   });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useActionState } from "react";
+import { useEffect, useState, useActionState, startTransition } from "react";
 import { upsertCategory, deleteCategory, type ActionState } from "@/app/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardAction, CardFooter } from "@/components/ui/card";
@@ -9,7 +9,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
+  DialogFooter
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,7 +22,7 @@ type Category = {
 };
 
 export function CategoriesSection({
-  categories,
+  categories
 }: {
   categories: Category[];
 }) {
@@ -30,17 +30,19 @@ export function CategoriesSection({
   const [editing, setEditing] = useState<Category | null>(null);
   const [upsertState, upsertAction, upsertPending] = useActionState(
     upsertCategory,
-    null,
+    null
   );
   const [deleteState, deleteAction, deletePending] = useActionState(
     deleteCategory,
-    null,
+    null
   );
 
   useEffect(() => {
     if (upsertState?.ok) {
-      setDialogOpen(false);
-      setEditing(null);
+      startTransition(() => {
+        setDialogOpen(false);
+        setEditing(null);
+      });
     }
   }, [upsertState]);
 

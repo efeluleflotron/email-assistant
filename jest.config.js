@@ -15,5 +15,14 @@ module.exports = createJestConfig({
   globalSetup: "<rootDir>/jest.global-setup.js",
   // Integration tests share a single Postgres DB — sequential execution prevents
   // concurrent runMigrations() calls from racing on the same migration tracking table.
-  maxWorkers: 1
+  maxWorkers: 1,
+  collectCoverageFrom: [
+    "src/**/*.{ts,tsx}",
+    "!src/**/*.d.ts",
+    "!src/**/*.test.{ts,tsx}",
+    "!src/__tests__/**",
+    "!src/db/migrations/**"
+  ],
+  coverageReporters: ["lcov", "text-summary"],
+  coverageDirectory: "coverage"
 });

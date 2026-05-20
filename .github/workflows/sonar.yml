@@ -28,6 +28,8 @@ jobs:
 
     env:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/email_assistant
+      AUTH_SECRET: ci-test-secret-not-real
+      MASTER_ENCRYPTION_KEY: Ts6QvTbtQNMFWQ556VayueaSMqYFix/WghiwyTaVzfo=
 
     steps:
       - uses: actions/checkout@v4

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ClassifyTestDialog } from "@/components/classify-test-dialog";
 
 type Category = {
   id: string;
@@ -58,9 +59,12 @@ export function CategoriesSection({
     <section className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Categories</h2>
-        <Button size="sm" onClick={openCreate}>
-          New category
-        </Button>
+        <div className="flex items-center gap-2">
+          <ClassifyTestDialog categories={categories} />
+          <Button size="sm" onClick={openCreate}>
+            New category
+          </Button>
+        </div>
       </div>
 
       {categories.length === 0 ? (

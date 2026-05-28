@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/db/client";
 import { categories } from "@/db/schema";
+import { classifyEmail } from "@/lib/ai/classifier";
+import { AIClientError } from "@/lib/ai/errors";
 
 export type ActionState = { ok: true } | { ok: false; error: string } | null;
 
@@ -70,4 +72,55 @@ export async function deleteCategory(
   await db.delete(categories).where(eq(categories.id, id));
   revalidatePath("/app");
   return { ok: true };
+}
+
+export type ClassifyTestState =
+  | { ok: true; categoryIds: string[] }
+  | { ok: false; error: string }
+  | null;
+
+export async function runClassificationTest(
+  _prev: ClassifyTestState,
+  formData: FormData,
+): Promise<ClassifyTestState> {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return { ok: false, error: "Unauthorized" };
+
+  const subject = (formData.get("subject") as string)?.trim();
+  const body = (formData.get("body") as string)?.trim();
+  if (!subject || !body) {
+    return { ok: false, error: "Subject and body are required" };
+  }
+
+  const userCategories = await db.query.categories.findMany({
+    where: (c, { eq }) => eq(c.userId, userId),
+  });
+  if (userCategories.length === 0) {
+    return { ok: false, error: "Create a category first" };
+  }
+
+  try {
+    const { categoryIds } = await classifyEmail({
+      subject,
+      body,
+      categories: userCategories.map((c) => ({
+        id: c.id,
+        name: c.name,
+        description: c.description,
+      })),
+    });
+    return { ok: true, categoryIds };
+  } catch (err) {
+    if (err instanceof AIClientError) {
+      const msg =
+        err.kind === "config"
+          ? "OpenAI key not configured. Add OPENAI_API_KEY to .env.local."
+          : err.kind === "timeout"
+            ? "The model took too long. Try again."
+            : "Classification failed. Try again.";
+      return { ok: false, error: msg };
+    }
+    throw err;
+  }
 }
